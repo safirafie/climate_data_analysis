@@ -34,3 +34,5 @@
 .directory
 
 hotCold.png
+*.so
+*.d

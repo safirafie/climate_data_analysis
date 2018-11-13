@@ -21,45 +21,33 @@ tempTrender::tempTrender(string filePath) {
   setFilePath(filePath);
 }
 
-double tempTrender::Gaussian(double* x, double* par) {
-  return par[0]*exp(-0.5*(x[0]*x[0] - 2*x[0]*par[1] + par[1]*par[1])/(par[2]*par[2]));}
-
 void tempTrender::hotCold() {
   // create two histograms for hottest day and coldest day
   TH1D* histHot = new TH1D("histHot", "hist Hot; Day of the year; Entries", 366, 1, 366);
   TH1D* histCold = new TH1D("histCold", "hist Cold; Day of the year; Entries", 366, 1, 366);
 
   // read the temperature and date from the data set of Lund
-  ifstream file(getFilePath());
+  ifstream fileYear(getFilePath());
+  Int_t yearF;
+  fileYear >> yearF;
+  fileYear.close();
   vector<Double_t> tempOfYear;
   vector<Int_t> dayOfYear;
-  Int_t nYears = 54;
-  Double_t maxTemp[nYears];
-  Double_t minTemp[nYears];
-  Double_t maxDay[nYears];
-  Double_t minDay[nYears];
-  Int_t maxIndex, minIndex;
   Int_t year, month, day, helpInt;
   Double_t temp;
   Char_t dash,comma,colon;
   string helpString;
-  Int_t yearF = 1961;
   Int_t dayF = 01;
   Int_t nDay = 1;
+  ifstream file(getFilePath());  
 
-  Int_t nY=-1;
   while(file >> year >> dash >> month >> dash >> day >> comma >> helpInt >> colon >> helpInt >> colon >> helpInt >> comma >> temp) {
     if (year!=yearF){
-      nY++;
-      maxTemp[nY] = *max_element(tempOfYear.begin(),tempOfYear.end());
-      maxIndex = distance(tempOfYear.begin(), max_element(tempOfYear.begin(),tempOfYear.end()));
-      maxDay[nY] = dayOfYear[maxIndex];
-      minTemp[nY] = *min_element(tempOfYear.begin(),tempOfYear.end());
-      minIndex = distance(tempOfYear.begin(), min_element(tempOfYear.begin(),tempOfYear.end()));
-      minDay[nY] = dayOfYear[minIndex];
-      cout << "In the year " << yearF << ", the hottest day is "<< maxDay[nY] << " with temperature " << maxTemp[nY] << ", and the coldest day is " << minDay[nY] << " with temperature " << minTemp[nY] << endl;
-      histHot->Fill(maxDay[nY]);
-      histCold->Fill(minDay[nY]);
+      Int_t maxDay = dayOfYear[distance(tempOfYear.begin(), max_element(tempOfYear.begin(),tempOfYear.end()))];
+      Int_t minDay = dayOfYear[distance(tempOfYear.begin(), min_element(tempOfYear.begin(),tempOfYear.end()))];
+      cout << "In the year " << yearF << ", the hottest day is "<< maxDay << ", and the coldest day is " << minDay << endl;
+      histHot->Fill(maxDay);
+      histCold->Fill(minDay);
       nDay=1;
       yearF = year;
     }
@@ -67,7 +55,6 @@ void tempTrender::hotCold() {
     tempOfYear.push_back(temp);
     if (day!=dayF){nDay++;}
     dayOfYear.push_back(nDay);
-    //      cout << nDay << " : " << temp << endl;
     dayF = day;
   }
   file.close();
@@ -182,7 +169,7 @@ void tempTrender::DayTemp(int monthToCalculate, int dayToCalculate){
   //Histogram for the temperatures of a given day of the year each year since 1961.
   TH1D* tempday = new TH1D("Day Temp","Temperature ; Temperature; Entries",300,-20,40);
 
-  ifstream file("smhi-opendata_Lund.csv");
+  ifstream file(getFilePath());
   Int_t helpint;
   Double_t temp;  
   Int_t day, month, year;
@@ -289,6 +276,11 @@ void tempTrender::tempPerYear(){
   TH2D* YearHist = new TH2D("YearHist", "Average temperature per year", 54, 1961, 2015,60,5,11);
 
   //Reading temperatures from file
+  ifstream fileYear(getFilePath());
+  Int_t year_now;
+  fileYear >> year_now;
+  fileYear.close();
+
   ifstream file(getFilePath());
   Int_t year, month, day, hour, minute, second;
   Char_t hyphen, semicolon, colon;
@@ -296,9 +288,8 @@ void tempTrender::tempPerYear(){
   Double_t a = 0;
   Double_t b=0;
   Double_t day_now;
-  Double_t year_temp[54];
+  Double_t year_temp;
   Int_t n_year = 0;
-  Int_t year_now=1961;
   vector<Double_t> vec_year;
   while(file >> year >> hyphen >> month >> hyphen >> day >> semicolon >> hour >> colon >> minute >> colon >> second >> semicolon >> temperature)
     {
@@ -328,8 +319,8 @@ void tempTrender::tempPerYear(){
 	for(unsigned int t =0; t < vec_year.size();t++){
 	  sum+=vec_year.at(t);
 	}
-	year_temp[n_year]=sum/vec_year.size();
-	YearHist->Fill(year,year_temp[n_year]);
+	year_temp = sum/vec_year.size();
+	YearHist->Fill(year,year_temp);
 	n_year++;
 	year_now++;      
 	vec_year.clear();
